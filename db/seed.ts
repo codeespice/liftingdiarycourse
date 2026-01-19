@@ -115,6 +115,11 @@ async function seed() {
     console.log('Creating users...');
     const usersData = await db.insert(users).values([
       {
+        email: 'user@example.com', // Test user for temporary auth
+        username: 'testuser',
+        passwordHash: '$2a$10$samplehashedpassword0',
+      },
+      {
         email: 'john@example.com',
         username: 'john_lifter',
         passwordHash: '$2a$10$samplehashedpassword1', // In real app, use bcrypt
@@ -132,7 +137,15 @@ async function seed() {
     ]).returning();
     console.log(`✓ Created ${usersData.length} users`);
 
-    const [user1, user2, user3] = usersData;
+    const [testUser, user1, user2, user3] = usersData;
+
+    // Today's date for test user workouts (so they appear on the dashboard)
+    const today = new Date();
+    today.setHours(10, 0, 0, 0);
+
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setHours(9, 0, 0, 0);
 
     // 3. Create Workouts for User 1 (John)
     console.log('Creating workouts...');
@@ -415,6 +428,121 @@ async function seed() {
       { exerciseId: shoulderExercises[2].id, setNumber: 3, reps: 18, weightKg: '22.50', rpe: '7.0', restSeconds: 45 },
     ]);
 
+    // 6. Create Workouts for Test User (today's date so they appear on dashboard)
+    console.log('Creating test user workouts for today...');
+
+    // Test User's Full Body Workout - TODAY
+    const [testUserWorkout1] = await db.insert(workouts).values({
+      userId: testUser.id,
+      name: 'Full Body Strength',
+      date: today,
+      notes: 'Morning session - feeling energized',
+      durationMinutes: 65,
+    }).returning();
+
+    const testUserExercises1 = await db.insert(exercises).values([
+      {
+        workoutId: testUserWorkout1.id,
+        templateId: templates.find(t => t.name === 'Squat')?.id,
+        exerciseName: 'Squat',
+        exerciseType: 'compound',
+        orderInWorkout: 1,
+      },
+      {
+        workoutId: testUserWorkout1.id,
+        templateId: templates.find(t => t.name === 'Bench Press')?.id,
+        exerciseName: 'Bench Press',
+        exerciseType: 'compound',
+        orderInWorkout: 2,
+      },
+      {
+        workoutId: testUserWorkout1.id,
+        templateId: templates.find(t => t.name === 'Barbell Row')?.id,
+        exerciseName: 'Barbell Row',
+        exerciseType: 'compound',
+        orderInWorkout: 3,
+      },
+    ]).returning();
+
+    // Sets for Test User Squat
+    await db.insert(sets).values([
+      { exerciseId: testUserExercises1[0].id, setNumber: 1, reps: 8, weightKg: '40.00', isWarmup: true, restSeconds: 90 },
+      { exerciseId: testUserExercises1[0].id, setNumber: 2, reps: 5, weightKg: '80.00', rpe: '7.0', restSeconds: 120 },
+      { exerciseId: testUserExercises1[0].id, setNumber: 3, reps: 5, weightKg: '90.00', rpe: '8.0', restSeconds: 150 },
+      { exerciseId: testUserExercises1[0].id, setNumber: 4, reps: 5, weightKg: '95.00', rpe: '8.5', restSeconds: 180 },
+    ]);
+
+    // Sets for Test User Bench Press
+    await db.insert(sets).values([
+      { exerciseId: testUserExercises1[1].id, setNumber: 1, reps: 8, weightKg: '40.00', isWarmup: true, restSeconds: 60 },
+      { exerciseId: testUserExercises1[1].id, setNumber: 2, reps: 5, weightKg: '60.00', rpe: '7.0', restSeconds: 90 },
+      { exerciseId: testUserExercises1[1].id, setNumber: 3, reps: 5, weightKg: '70.00', rpe: '8.0', restSeconds: 120 },
+      { exerciseId: testUserExercises1[1].id, setNumber: 4, reps: 4, weightKg: '75.00', rpe: '9.0', isFailure: true, restSeconds: 120 },
+    ]);
+
+    // Sets for Test User Barbell Row
+    await db.insert(sets).values([
+      { exerciseId: testUserExercises1[2].id, setNumber: 1, reps: 8, weightKg: '40.00', rpe: '6.5', restSeconds: 60 },
+      { exerciseId: testUserExercises1[2].id, setNumber: 2, reps: 8, weightKg: '50.00', rpe: '7.5', restSeconds: 90 },
+      { exerciseId: testUserExercises1[2].id, setNumber: 3, reps: 6, weightKg: '55.00', rpe: '8.5', restSeconds: 90 },
+    ]);
+
+    // Test User's Yesterday Workout
+    const [testUserWorkout2] = await db.insert(workouts).values({
+      userId: testUser.id,
+      name: 'Upper Body Accessories',
+      date: yesterday,
+      notes: 'Light session focusing on pump work',
+      durationMinutes: 45,
+    }).returning();
+
+    const testUserExercises2 = await db.insert(exercises).values([
+      {
+        workoutId: testUserWorkout2.id,
+        templateId: templates.find(t => t.name === 'Overhead Press')?.id,
+        exerciseName: 'Overhead Press',
+        exerciseType: 'compound',
+        orderInWorkout: 1,
+      },
+      {
+        workoutId: testUserWorkout2.id,
+        templateId: templates.find(t => t.name === 'Lateral Raises')?.id,
+        exerciseName: 'Lateral Raises',
+        exerciseType: 'isolation',
+        orderInWorkout: 2,
+      },
+      {
+        workoutId: testUserWorkout2.id,
+        templateId: templates.find(t => t.name === 'Bicep Curls')?.id,
+        exerciseName: 'Bicep Curls',
+        exerciseType: 'isolation',
+        orderInWorkout: 3,
+      },
+    ]).returning();
+
+    // Sets for Test User Overhead Press
+    await db.insert(sets).values([
+      { exerciseId: testUserExercises2[0].id, setNumber: 1, reps: 8, weightKg: '30.00', isWarmup: true, restSeconds: 60 },
+      { exerciseId: testUserExercises2[0].id, setNumber: 2, reps: 6, weightKg: '45.00', rpe: '7.5', restSeconds: 90 },
+      { exerciseId: testUserExercises2[0].id, setNumber: 3, reps: 5, weightKg: '50.00', rpe: '8.5', restSeconds: 120 },
+    ]);
+
+    // Sets for Test User Lateral Raises
+    await db.insert(sets).values([
+      { exerciseId: testUserExercises2[1].id, setNumber: 1, reps: 15, weightKg: '8.00', rpe: '7.0', restSeconds: 45 },
+      { exerciseId: testUserExercises2[1].id, setNumber: 2, reps: 12, weightKg: '10.00', rpe: '8.0', restSeconds: 45 },
+      { exerciseId: testUserExercises2[1].id, setNumber: 3, reps: 10, weightKg: '10.00', rpe: '8.5', isFailure: true, restSeconds: 45 },
+    ]);
+
+    // Sets for Test User Bicep Curls
+    await db.insert(sets).values([
+      { exerciseId: testUserExercises2[2].id, setNumber: 1, reps: 12, weightKg: '10.00', rpe: '6.5', restSeconds: 45 },
+      { exerciseId: testUserExercises2[2].id, setNumber: 2, reps: 10, weightKg: '12.50', rpe: '7.5', restSeconds: 45 },
+      { exerciseId: testUserExercises2[2].id, setNumber: 3, reps: 8, weightKg: '12.50', rpe: '8.5', isFailure: true, restSeconds: 45 },
+    ]);
+
+    console.log('✓ Created test user workouts for today and yesterday');
+
     console.log('✓ Created workouts with exercises and sets');
 
     // Summary
@@ -432,10 +560,12 @@ async function seed() {
     console.log(`   Sets: ${totalSets.length}`);
     console.log('═══════════════════════════════════════');
     console.log('\n👥 Sample Users Created:');
+    console.log('   - user@example.com (username: testuser) ← DEFAULT LOGIN USER');
     console.log('   - john@example.com (username: john_lifter)');
     console.log('   - sarah@example.com (username: sarah_strong)');
     console.log('   - mike@example.com (username: mike_muscles)');
     console.log('\n💪 Sample Workouts:');
+    console.log('   - Test User: Full Body Strength (today), Upper Body Accessories (yesterday)');
     console.log('   - John: Push Day, Leg Day');
     console.log('   - Sarah: Pull Day');
     console.log('   - Mike: Shoulder Day');

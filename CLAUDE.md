@@ -6,6 +6,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a Next.js 16.1.1 application (App Router) with TypeScript, React 19, and Tailwind CSS 4. The project is a lifting diary course application currently in its initial scaffolded state.
 
+## Code Generation Standards
+
+**CRITICAL: Before generating any code, Claude Code MUST first consult the relevant documentation files in the `/docs` directory.**
+
+- All code generation must adhere to the standards and conventions defined in the `/docs` directory
+- Review applicable documentation files before writing or modifying code
+- If a relevant docs file exists (e.g., `docs/ui.md` for UI components), follow those standards exactly
+- This ensures consistency and adherence to project-wide coding standards
+
+**Current Documentation Files:**
+- `docs/ui.md` - UI component standards (shadcn/ui usage, date formatting with date-fns)
+- `docs/data-fetching.md` - **CRITICAL** data fetching and database query standards (server components only, /data helpers, Drizzle ORM, data isolation security)
+- `docs/data-mutations.md` - **CRITICAL** data mutation standards (server actions in actions.ts files, /data helpers, typed params NOT FormData, Zod validation)
+- `docs/server-components.md` - **CRITICAL** server component standards (params/searchParams MUST be awaited as Promises in Next.js 15)
+
 ## Development Commands
 
 ### Running the Application
